@@ -1,5 +1,7 @@
 # 🔬 QualInsight - AI 辅助质性研究平台 v4.1
 
+**[English](README.md) | [简体中文](README.zh-Hans.md)**
+
 > 智能赋能研究，保持人文关怀
 
 [![Python](https://img.shields.io/badge/Python-3.9%2B-blue)](https://www.python.org/)
