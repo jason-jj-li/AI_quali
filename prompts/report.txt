@@ -1,0 +1,937 @@
+"""
+AI报告生成提示词模板
+支持中英文双语，参考IMRAD结构（Introduction, Methods, Results, And Discussion）
+"""
+
+# ===== 系统提示词 =====
+SYSTEM_PROMPT_ZH = """你是一位资深的质性研究方法学专家和学术写作专家。你擅长撰写符合学术规范的质性研究报告。
+
+你的任务是基于提供的研究数据，生成高质量、符合学术规范的报告内容。
+
+## 写作原则
+
+1. **学术性语言**：使用客观、准确的学术语言
+2. **数据驱动**：所有结论必须基于提供的编码和主题数据
+3. **引用规范**：使用典型引用支持论点，引用格式为 [来源文档, 参与者]
+4. **逻辑清晰**：段落之间有清晰的逻辑过渡
+5. **避免过度解读**：基于数据说话，不夸大发现
+
+## IMRAD结构
+
+- **引言 (Introduction)**：研究背景、问题、意义、结构
+- **方法 (Methods)**：研究设计、数据收集、分析方法、质量控制
+- **结果 (Results)**：按主题组织发现，包含典型引用
+- **讨论 (Discussion)**：发现总结、主题关系、局限性、未来方向
+- **结论 (Conclusion)**：研究贡献、理论和实践意义
+
+## 引用格式
+
+文中引用格式：[文档名, 参与者ID]
+示例：[interview_01.pdf, P01]
+
+## 质量标准
+
+- 内容基于真实数据，不编造
+- 引用充分，每个主题至少2-3个典型引用
+- 结构完整，符合学术规范
+- 语言客观，避免主观判断
+"""
+
+SYSTEM_PROMPT_EN = """You are a senior qualitative research methodologist and academic writing expert. You specialize in writing high-quality academic reports that follow academic standards.
+
+Your task is to generate high-quality, academically standard report content based on the provided research data.
+
+## Writing Principles
+
+1. **Academic Language**: Use objective, accurate academic language
+2. **Data-Driven**: All conclusions must be based on the provided coding and theme data
+3. **Citation Standards**: Use representative quotes to support arguments, citation format: [Document, Participant]
+4. **Logical Clarity**: Clear logical transitions between paragraphs
+5. **Avoid Over-Interpretation**: Speak based on data, do not exaggerate findings
+
+## IMRAD Structure
+
+- **Introduction**: Research background, question, significance, structure
+- **Methods**: Research design, data collection, analysis methods, quality control
+- **Results**: Findings organized by themes, including representative quotes
+- **Discussion**: Summary of findings, theme relationships, limitations, future directions
+- **Conclusion**: Research contributions, theoretical and practical implications
+
+## Citation Format
+
+In-text citation format: [Document, ParticipantID]
+Example: [interview_01.pdf, P01]
+
+## Quality Standards
+
+- Content based on real data, no fabrication
+- Sufficient citations, at least 2-3 representative quotes per theme
+- Complete structure, following academic standards
+- Objective language, avoid subjective judgments
+"""
+
+
+# ===== 用户提示词模板 =====
+
+# 研究问题生成提示词
+RESEARCH_QUESTION_PROMPT = """
+基于项目信息，生成规范的研究问题陈述。
+
+## 项目信息
+- 项目名称：{project_name}
+- 研究主题：{research_topic}
+- 目标群体：{target_population}
+- 研究目的：{purpose}
+
+## 任务要求
+
+请生成：
+
+1. **主要研究问题**：核心研究问题
+   - 应该是开放式的（如何、为什么、什么体验）
+   - 应该与研究主题直接相关
+   - 应该具有理论和实践意义
+
+2. **子问题**（可选）：如果需要，可以分解为2-4个子问题
+   - 子问题应该帮助回答主要研究问题
+   - 子问题之间应该逻辑相关
+
+3. **问题陈述**（100-200字）
+   - 研究背景
+   - 研究的重要性
+   - 研究的空白
+   - 研究问题的提出
+
+输出应为学术性的问题陈述。
+"""
+
+
+# 引言生成提示词
+INTRODUCTION_PROMPT = """
+生成研究报告的引言部分。
+
+## 项目信息
+- 研究问题：{research_question}
+- 研究领域：{research_field}
+- 研究背景：{background}
+
+## 相关文献（如果有）
+{literature}
+
+## 任务要求
+
+引言部分应包含：
+
+1. **研究背景和意义**（200-300字）
+   - 研究领域的现状
+   - 研究问题的重要性
+   - 理论和实践意义
+
+2. **文献综述**（200-300字）
+   - 相关研究的概述
+   - 研究空白的识别
+   - 本研究如何填补空白
+
+3. **研究目的和问题**（100-200字）
+   - 清晰陈述研究目的
+   - 提出研究问题
+
+4. **报告结构**（可选）
+   - 简要说明报告各章节的内容
+
+## 写作要求
+
+- 从宽泛到具体（漏斗式结构）
+- 使用学术语言
+- 引用相关文献
+- 清晰阐述研究贡献
+- 避免过度详细（方法细节放在方法部分）
+
+输出应为结构化的学术文本。
+"""
+
+
+# 方法部分生成提示词
+METHODS_PROMPT = """
+生成研究报告的方法部分。
+
+## 项目信息
+- 研究问题：{research_question}
+- 研究方法：{methodology}
+- 数据收集：{data_collection}
+
+## 数据信息
+- 参与者数量：{n_participants}
+- 数据来源：{data_sources}
+- 数据类型：{data_types}
+
+## 分析方法
+- 编码方法：{coding_method}
+- 分析软件：{software}
+- 分析步骤：{analysis_steps}
+
+## 任务要求
+
+方法部分应包含：
+
+1. **研究设计**（100-150字）
+   - 研究方法的选择和理由
+   - 研究范式
+   - 研究的哲学立场（如适用）
+
+2. **参与者**（100-150字）
+   - 参与者特征
+   - 招募方式
+   - 样本量及饱和度说明
+
+3. **数据收集**（150-200字）
+   - 数据收集方法
+   - 数据收集过程
+   - 伦理考虑
+
+4. **数据分析**（200-250字）
+   - 分析方法
+   - 编码过程
+   - 主题识别过程
+   - 质量控制措施
+
+5. **研究者立场**（可选，100字）
+   - 研究者的背景和预设
+   - 对研究的影响
+
+## 写作要求
+
+- 使用过去时
+- 详细但简洁
+- 使研究可复制
+- 引用方法论文献
+- 承认局限性和假设
+
+输出应为结构化的学术文本。
+"""
+
+
+# 结果部分生成提示词
+RESULTS_PROMPT = """
+生成研究报告的结果部分。
+
+## 研究信息
+- 研究问题：{research_question}
+- 研究方法：{methodology}
+
+## 主题列表
+{themes}
+
+## 编码和引用数据
+{coded_data}
+
+## 任务要求
+
+结果部分应包含：
+
+1. **概述段落**（100-150字）
+   - 简要说明分析过程
+   - 概述识别出的主题
+   - 说明主题如何回答研究问题
+
+2. **主题呈现**（逐个主题）
+   对于每个主题（300-500字）：
+
+   a. **主题标题**：简洁的学术性标题
+
+   b. **主题定义和描述**：
+      - 清晰定义主题
+      - 描述主题的不同维度
+
+   c. **相关编码**：
+      - 列出主题包含的编码
+      - 说明编码如何整合
+
+   d. **支持性引用**：
+      - 选择2-4个典型引用
+      - 标注参与者ID和行号，例如 [P01:45-48]
+      - 简要分析引用如何支持主题
+
+   e. **偏离性案例**（如果有）：
+      - 识别不支持主题的案例
+      - 分析其意义
+
+   f. **主题小结**：
+      - 总结主题的核心内容
+      - 联系回研究问题
+
+3. **总结段落**（100-150字）
+   - 概括主要发现
+   - 说明主题之间的关系
+   - 过渡到讨论部分
+
+## 写作要求
+
+- **主题组织**：借鉴literature-review的模式，按主题组织（而非逐个文档总结）
+- **证据性**：所有论断都要有具体的引用支持
+- **平衡性**：呈现支持性和偏离性案例
+- **客观性**：描述而非解释（解释在讨论部分）
+- **引用规范**：[参与者ID:行号范围]
+- **避免过度解读**：紧扣数据，不要过度概括
+
+输出应为结构化的Markdown或学术文本。
+"""
+
+
+# 讨论部分生成提示词
+DISCUSSION_PROMPT = """
+生成研究报告的讨论部分。
+
+## 研究信息
+- 研究问题：{research_question}
+- 主要发现：{main_findings}
+
+## 主题列表
+{themes}
+
+## 相关文献（如果有）
+{literature}
+
+## 任务要求
+
+讨论部分应包含：
+
+1. **主要发现总结**（200-250字）
+   - 简要重述主要发现
+   - 说明发现如何回答研究问题
+   - 突出最重要的发现
+
+2. **与文献的对话**（300-400字）
+   - 研究发现与现有研究的关系
+   - 支持还是挑战现有理论/观点
+   - 与其他研究的异同
+
+3. **理论意义**（200-250字）
+   - 研究对理论的贡献
+   - 是否拓展或修正了现有理论
+   - 理论启示
+
+4. **实践意义**（200-250字）
+   - 研究对实践的意义
+   - 对相关领域的启示
+   - 政策或应用建议（如适用）
+
+5. **研究局限性**（150-200字）
+   - 诚实承认研究的局限
+   - 样本、方法、分析等方面的局限
+   - 局限性对发现的影响
+
+6. **未来研究方向**（100-150字）
+   - 基于本研究提出未来研究建议
+   - 未解决的问题
+   - 可以改进的方向
+
+7. **结论段落**（100-150字）
+   - 总结研究贡献
+   - 最后的思考
+
+## 写作要求
+
+- 从具体到宽泛（与引言相反）
+- 解释而非描述
+- 与文献和理论对话
+- 承认复杂性
+- 诚实面对局限性
+- 避免过度概括
+
+输出应为结构化的学术文本。
+"""
+
+
+# 摘要生成提示词
+ABSTRACT_PROMPT = """
+生成研究报告的摘要。
+
+## 研究信息
+- 研究问题：{research_question}
+- 研究方法：{methodology}
+- 主要发现：{main_findings}
+- 主要结论：{main_conclusions}
+
+## 任务要求
+
+摘要应包含（250-350字）：
+
+1. **背景和目的**（1-2句）
+   - 研究背景
+   - 研究目的
+
+2. **方法**（2-3句）
+   - 研究设计
+   - 参与者
+   - 数据收集和分析
+
+3. **结果**（3-4句）
+   - 主要发现
+   - 识别出的主题
+
+4. **结论和意义**（2-3句）
+   - 主要结论
+   - 理论和实践意义
+
+## 写作要求
+
+- 简洁明了
+- 自成一体
+- 包含关键词
+- 避免引用和缩写
+- 突出研究贡献
+
+输出应为结构化的学术文本。
+"""
+
+
+# 引用选择提示词
+QUOTATION_SELECTION_PROMPT = """
+为主题选择最佳引用。
+
+## 主题信息
+- 主题名称：{theme_name}
+- 主题定义：{definition}
+- 相关编码：{codes}
+
+## 可用的引用
+{available_quotes}
+
+## 任务要求
+
+请选择以下类型的引用：
+
+1. **支持性引用**（3-5个）
+   - 明确支持主题的案例
+   - 典型性：最能代表主题
+   - 多样性：来自不同参与者
+   - 清晰性：表达清楚
+
+2. **偏离性引用**（1-2个）
+   - 不支持或挑战主题的案例
+   - 增强分析的深度
+   - 展现研究的诚实性
+
+3. **分析性说明**
+   - 说明为什么选择这些引用
+   - 解释引用如何支持主题
+   - 标注参与者ID和行号
+
+输出应包含：
+- 选定的引用列表
+- 每个引用的说明
+- 建议的使用方式
+"""
+
+
+# 结论生成提示词
+CONCLUSION_PROMPT = """
+生成研究报告的结论部分。
+
+## 研究信息
+- 研究问题：{research_question}
+- 主要发现：{main_findings}
+- 主要贡献：{contributions}
+
+## 任务要求
+
+结论部分应包含（200-300字）：
+
+1. **研究发现总结**
+   - 简明扼要地总结主要发现
+   - 回答研究问题
+
+2. **研究贡献**
+   - 理论贡献
+   - 方法论贡献
+   - 实践贡献
+
+3. **最终思考**
+   - 研究的意义
+   - 对读者的启示
+
+## 写作要求
+
+- 简洁有力
+- 避免引入新内容
+- 强调研究价值
+- 给读者留下深刻印象
+
+输出应为结构化的学术文本。
+"""
+
+
+# 局限性分析提示词
+LIMITATIONS_PROMPT = """
+分析研究的局限性。
+
+## 研究信息
+- 研究问题：{research_question}
+- 研究方法：{methodology}
+- 样本：{sample}
+- 数据收集：{data_collection}
+
+## 任务要求
+
+请分析研究的各个方面可能存在的局限性：
+
+1. **样本局限性**
+   - 样本量和代表性
+   - 招募方式和潜在偏差
+   - 人口学特征限制
+
+2. **方法局限性**
+   - 数据收集方式的限制
+   - 分析方法的选择
+   - 研究者的影响
+
+3. **分析局限性**
+   - 编码和主题识别的主观性
+   - 数据饱和度的判断
+   - 可能遗漏的视角
+
+4. **效度和信度**
+   - 内部效度的考虑
+   - 可重复性的限制
+   - 研究者的预设影响
+
+5. **伦理和实践限制**
+   - 伦理考虑对研究的影响
+   - 资源限制
+
+对于每个局限性：
+- 说明局限性的具体内容
+- 分析局限性对研究发现的影响
+- 提出缓解策略
+
+输出应为结构化的学术文本，诚实面对研究局限。
+"""
+
+
+# ===== 中英文双语提示词模板 =====
+
+# 引言生成提示词（双语）
+INTRODUCTION_BILINGUAL = {
+    'zh': """请基于以下研究信息撰写**引言**部分。
+
+## 研究信息
+
+**研究问题**：
+{research_question}
+
+**研究方法**：
+{methodology}
+
+**识别出的主题**：
+{themes_list}
+
+## 写作要求
+
+请撰写引言部分，包含以下内容：
+
+1. **研究背景**（2-3段）
+   - 阐述研究领域的背景和现状
+   - 说明为什么这个问题值得研究
+
+2. **研究问题**（1段）
+   - 清晰陈述本研究的研究问题
+   - 说明研究问题的理论或实践意义
+
+3. **论文结构**（1段）
+   - 简要说明论文的结构安排
+
+## 字数要求
+800-1000字
+
+请直接输出引言部分的完整文本，不需要添加标题或标记。
+""",
+
+    'en': """Please write the **Introduction** section based on the following research information.
+
+## Research Information
+
+**Research Question**:
+{research_question}
+
+**Methodology**:
+{methodology}
+
+**Identified Themes**:
+{themes_list}
+
+## Writing Requirements
+
+Please write an introduction that includes:
+
+1. **Research Background** (2-3 paragraphs)
+   - Elaborate on the background and current status of the research field
+   - Explain why this question is worth studying
+
+2. **Research Question** (1 paragraph)
+   - Clearly state the research question
+   - Explain the theoretical or practical significance
+
+3. **Paper Structure** (1 paragraph)
+   - Briefly outline the structure of the paper
+
+## Word Count
+600-800 words
+
+Please output the complete text of the introduction section directly, without adding titles or markers.
+"""
+}
+
+
+# 方法生成提示词（双语）
+METHODS_BILINGUAL = {
+    'zh': """请基于以下研究信息撰写**方法**部分。
+
+## 研究信息
+
+**研究方法**：
+{methodology}
+
+**数据收集**：
+- 文档数量：{doc_count} 个
+- 参与者：{participants}
+
+**数据分析**：
+- 编码数量：{code_count} 个
+- 主题数量：{theme_count} 个
+
+## 写作要求
+
+请撰写方法部分，包含以下内容：
+
+1. **研究设计**（1-2段）
+   - 说明研究采用的方法论
+   - 解释为什么选择这种方法
+
+2. **数据收集**（1-2段）
+   - 说明数据来源和收集方法
+   - 描述参与者情况
+
+3. **数据分析**（2-3段）
+   - 说明数据分析过程
+   - 提及使用的分析工具
+   - 说明如何确保分析质量
+
+## 字数要求
+1000-1200字
+""",
+
+    'en': """Please write the **Methods** section based on the following research information.
+
+## Research Information
+
+**Methodology**:
+{methodology}
+
+**Data Collection**:
+- Number of documents: {doc_count}
+- Participants: {participants}
+
+**Data Analysis**:
+- Number of codes: {code_count}
+- Number of themes: {theme_count}
+
+## Writing Requirements
+
+Please write a methods section that includes:
+
+1. **Research Design** (1-2 paragraphs)
+   - State the methodology
+   - Explain why this method was chosen
+
+2. **Data Collection** (1-2 paragraphs)
+   - Describe data sources and collection methods
+   - Describe participant information
+
+3. **Data Analysis** (2-3 paragraphs)
+   - Describe the data analysis process
+   - Mention analysis tools used
+   - Explain quality assurance measures
+
+## Word Count
+800-1000 words
+"""
+}
+
+
+# 结果生成提示词（双语）
+RESULTS_BILINGUAL = {
+    'zh': """请基于以下主题数据撰写**结果**部分。
+
+## 主题数据
+
+{themes_data}
+
+## 写作要求
+
+请按主题组织结果部分，每个主题包含：
+
+1. **主题名称和定义**（1段）
+2. **主题描述**（2-3段）
+3. **典型引用**（每个主题2-3个）
+
+## 字数要求
+2000-3000字（取决于主题数量）
+""",
+
+    'en': """Please write the **Results** section based on the following theme data.
+
+## Theme Data
+
+{themes_data}
+
+## Writing Requirements
+
+Please organize the results section by themes, each theme including:
+
+1. **Theme Name and Definition** (1 paragraph)
+2. **Theme Description** (2-3 paragraphs)
+3. **Representative Quotes** (2-3 per theme)
+
+## Word Count
+1500-2500 words (depending on number of themes)
+"""
+}
+
+
+# 讨论生成提示词（双语）
+DISCUSSION_BILINGUAL = {
+    'zh': """请基于以下研究发现撰写**讨论**部分。
+
+## 研究发现
+
+{themes_summary}
+
+## 研究问题
+{research_question}
+
+## 写作要求
+
+请撰写讨论部分，包含以下内容：
+
+1. **主要发现总结**（2-3段）
+2. **主题间关系**（2-3段）
+3. **理论意义**（1-2段）
+4. **实践意义**（1-2段）
+5. **研究局限性**（1段）
+6. **未来研究方向**（1段）
+
+## 字数要求
+1200-1500字
+""",
+
+    'en': """Please write the **Discussion** section based on the following research findings.
+
+## Research Findings
+
+{themes_summary}
+
+## Research Question
+{research_question}
+
+## Writing Requirements
+
+Please write a discussion section that includes:
+
+1. **Summary of Key Findings** (2-3 paragraphs)
+2. **Relationships Between Themes** (2-3 paragraphs)
+3. **Theoretical Implications** (1-2 paragraphs)
+4. **Practical Implications** (1-2 paragraphs)
+5. **Study Limitations** (1 paragraph)
+6. **Future Research Directions** (1 paragraph)
+
+## Word Count
+900-1200 words
+"""
+}
+
+
+# 结论生成提示词（双语）
+CONCLUSION_BILINGUAL = {
+    'zh': """请基于以下研究发现撰写**结论**部分。
+
+## 研究发现
+{themes_summary}
+
+## 研究问题
+{research_question}
+
+## 写作要求
+
+请撰写结论部分，包含以下内容：
+
+1. **研究总结**（1-2段）
+2. **研究贡献**（1-2段）
+3. **最终结语**（1段）
+
+## 字数要求
+400-500字
+""",
+
+    'en': """Please write the **Conclusion** section based on the following research findings.
+
+## Research Findings
+{themes_summary}
+
+## Research Question
+{research_question}
+
+## Writing Requirements
+
+Please write a conclusion section that includes:
+
+1. **Research Summary** (1-2 paragraphs)
+2. **Research Contributions** (1-2 paragraphs)
+3. **Final Concluding Remark** (1 paragraph)
+
+## Word Count
+300-400 words
+"""
+}
+
+
+# 摘要生成提示词（双语）
+ABSTRACT_BILINGUAL = {
+    'zh': """请基于以下研究信息撰写**摘要**。
+
+## 研究信息
+
+**研究问题**：
+{research_question}
+
+**研究方法**：
+{methodology}
+
+**主要发现**：
+{themes_summary}
+
+## 字数要求
+250-350字
+""",
+
+    'en': """Please write the **Abstract** based on the following research information.
+
+## Research Information
+
+**Research Question**:
+{research_question}
+
+**Methodology**:
+{methodology}
+
+**Key Findings**:
+{themes_summary}
+
+## Word Count
+200-300 words
+"""
+}
+
+
+# ===== 辅助函数 =====
+
+def get_prompt_template(section: str, language: str = 'zh') -> str:
+    """
+    获取指定章节和语言的提示词模板
+
+    Args:
+        section: 章节名称 (introduction, methods, results, discussion, conclusion, abstract)
+        language: 语言 (zh, en)
+
+    Returns:
+        提示词模板
+    """
+    templates = {
+        'introduction': INTRODUCTION_BILINGUAL,
+        'methods': METHODS_BILINGUAL,
+        'results': RESULTS_BILINGUAL,
+        'discussion': DISCUSSION_BILINGUAL,
+        'conclusion': CONCLUSION_BILINGUAL,
+        'abstract': ABSTRACT_BILINGUAL
+    }
+
+    return templates.get(section, {}).get(language, '')
+
+
+def get_system_prompt(language: str = 'zh') -> str:
+    """
+    获取系统提示词
+
+    Args:
+        language: 语言 (zh, en)
+
+    Returns:
+        系统提示词
+    """
+    if language == 'en':
+        return SYSTEM_PROMPT_EN
+    return SYSTEM_PROMPT_ZH
+
+
+def format_themes_for_prompt(themes: list, language: str = 'zh') -> str:
+    """
+    格式化主题数据用于提示词
+
+    Args:
+        themes: 主题列表
+        language: 语言
+
+    Returns:
+        格式化后的主题字符串
+    """
+    output = []
+    for i, theme in enumerate(themes, 1):
+        if language == 'zh':
+            output.append(f"{i}. {theme.get('name', '')}: {theme.get('description', '')[:100]}...")
+        else:
+            output.append(f"{i}. {theme.get('name', '')}: {theme.get('description', '')[:100]}...")
+
+    return "\n".join(output)
+
+
+def format_themes_detailed(themes: list, language: str = 'zh') -> str:
+    """
+    格式化主题详细数据用于结果部分
+
+    Args:
+        themes: 主题列表
+        language: 语言
+
+    Returns:
+        格式化后的详细主题数据
+    """
+    output = []
+    for i, theme in enumerate(themes, 1):
+        if language == 'zh':
+            output.append(f"""
+### 主题 {i}: {theme.get('name', '')}
+
+**定义**: {theme.get('definition', '未提供')}
+
+**描述**: {theme.get('description', '')}
+
+**典型引用**:
+{chr(10).join([f"- {q.get('text_content', '')[:150]}... [{q.get('document_filename', '')}]"
+               for q in theme.get('quotes', [])[:3]])}
+---
+""")
+        else:
+            output.append(f"""
+### Theme {i}: {theme.get('name', '')}
+
+**Definition**: {theme.get('definition', 'Not provided')}
+
+**Description**: {theme.get('description', '')}
+
+**Representative Quotes**:
+{chr(10).join([f"- {q.get('text_content', '')[:150]}... [{q.get('document_filename', '')}]"
+               for q in theme.get('quotes', [])[:3]])}
+---
+""")
+
+    return "\n".join(output)

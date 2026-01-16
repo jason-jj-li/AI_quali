@@ -1,0 +1,53 @@
+# AI Qualitative Research Platform - Python Dependencies
+# Python 3.9+ required
+
+# ==================== Core Framework ====================
+streamlit>=1.28.0
+
+# ==================== Data Processing ====================
+pandas>=2.0.0
+numpy>=1.24.0
+
+# ==================== Visualization ====================
+plotly>=5.18.0
+
+# ==================== Document Processing ====================
+PyPDF2>=3.0.0
+python-docx>=1.0.0
+
+# ==================== LLM Providers ====================
+# OpenAI API (also used by LM Studio and Deepseek)
+openai>=1.0.0
+
+# Anthropic Claude API
+anthropic>=0.18.0
+
+# ==================== Optional Dependencies ====================
+# For better token counting (optional but recommended)
+tiktoken>=0.5.0
+
+# ==================== Development Dependencies ====================
+# Code formatting
+black>=23.0.0
+
+# Linting
+ruff>=0.1.0
+
+# Type checking
+mypy>=1.7.0
+
+# ==================== Testing Dependencies ====================
+# Testing framework
+pytest>=7.4.0
+pytest-cov>=4.1.0
+
+# Streamlit testing
+streamlit-test>=0.1.0
+
+# ==================== Pre-commit ====================
+pre-commit>=3.5.0
+
+# ==================== Notes ====================
+# - LM Studio uses the OpenAI package with a custom base_url
+# - Deepseek uses the OpenAI-compatible API
+# - tiktoken is optional but provides better token counting for OpenAI models
