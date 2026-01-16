@@ -1,6 +1,6 @@
 # 🔬 QualInsight - AI-Assisted Qualitative Research Platform v4.1
 
-**[English](README.md) | [简体中文](README.zh-Hans.md)**
+[![English](https://img.shields.io/badge/lang-English-blue.svg)](README.md) [![中文](https://img.shields.io/badge/lang-中文-red.svg)](README.zh-Hans.md)
 
 > Empowering Research, Maintaining Humanity
 
